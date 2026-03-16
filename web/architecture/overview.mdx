@@ -1,0 +1,93 @@
+---
+title: "Architecture overview"
+description: "High-level view of the Encuadrado Web application architecture."
+---
+
+## Application factory
+
+The app uses Flask's application factory pattern via `create_app(env_name)` in `encuadrado_web/__init__.py`. This function:
+
+1. Creates the Flask instance
+2. Loads environment-specific configuration from `config.py`
+3. Initializes extensions (database, cache, Celery, mail, OAuth)
+4. Registers 111+ Flask Blueprints
+5. Configures CORS, error handlers, and Jinja2 context processors
+
+```python
+# Simplified view
+app = create_app('development')  # or 'production', 'testing'
+```
+
+## Directory structure
+
+```
+encuadrado_web/
+├── __init__.py          # App factory (create_app)
+├── config.py            # Environment configs (Development, Production, Testing)
+├── models/              # SQLAlchemy models (117 files, 120+ models)
+├── modules/             # Feature modules (72 modules)
+│   └── [feature]/
+│       ├── routes.py
+│       ├── services/
+│       ├── serializer.py
+│       ├── tasks.py
+│       └── middlewares.py
+├── api_v1/              # Versioned API endpoints
+├── app_mobile/          # Mobile-specific endpoints
+├── templates/           # Jinja2 templates
+├── static/
+│   ├── jsx/             # React components (140+ bundles)
+│   ├── dist/            # Webpack output
+│   ├── css/             # Stylesheets
+│   └── js/              # Vanilla JavaScript
+├── schemas.py           # Marshmallow schemas
+├── utils.py             # Shared utilities
+└── helpers.py           # Helper functions
+```
+
+## Request flow
+
+```
+Client Request
+    │
+    ▼
+Flask Router (Blueprint)
+    │
+    ▼
+Middleware (auth, validation)
+    │
+    ▼
+Route Handler (routes.py)
+    │
+    ▼
+Service Layer (services/)
+    │
+    ▼
+Model Layer (models/)
+    │
+    ▼
+PostgreSQL Database
+```
+
+## Configuration
+
+Three environment classes in `config.py`:
+
+| Environment | Purpose | Key settings |
+|-------------|---------|-------------|
+| `Development` | Local dev | Debug enabled, debug toolbar, local Redis |
+| `Production` | Live app | Connection pooling (16), CDN, SSL cache, uWSGI |
+| `Testing` | Test suite | Test database, mocked services |
+
+## Extensions
+
+The app initializes these Flask extensions:
+
+- **SQLAlchemy** - ORM and database management
+- **Flask-Caching** - Redis-backed caching
+- **Celery** - Background task processing
+- **Flask-Mail** - Email sending
+- **Flask-Login** - Session authentication
+- **Flask-CORS** - Cross-origin resource sharing
+- **Flask-Migrate** - Alembic database migrations
+- **Sentry** - Error tracking and monitoring

@@ -1,0 +1,29 @@
+---
+title: "Intake forms"
+description: "Pre-appointment questionnaires and patient data collection."
+---
+
+## Module location
+
+- **Routes**: `encuadrado_web/modules/intake_forms/routes.py`
+- **Services**: `encuadrado_web/modules/intake_forms/services/`
+
+## Overview
+
+Intake forms allow professionals to collect patient information before appointments. Forms are customizable with different question types and can be attached to services.
+
+## Key models
+
+| Model | Description |
+|-------|-------------|
+| `IntakeFormModel` | Form definitions |
+| `IntakeFormQuestionModel` | Questions within a form |
+| `IntakeFormSubmissionModel` | Patient submissions |
+| `IntakeFormAnswerModel` | Individual answers |
+
+## Features
+
+- Custom form builder with multiple question types
+- Automatic form distribution before appointments
+- Submission tracking and review
+- Form-to-service association

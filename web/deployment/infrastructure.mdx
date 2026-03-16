@@ -1,0 +1,51 @@
+---
+title: "Infrastructure"
+description: "AWS infrastructure and production environment."
+---
+
+## AWS services
+
+| Service | Purpose |
+|---------|---------|
+| **Elastic Beanstalk** | Application hosting and auto-scaling |
+| **RDS** | PostgreSQL database (managed) |
+| **S3** | Static file storage, assets, uploads |
+| **CloudFront** | CDN for static assets |
+| **Route53** | DNS management |
+| **ECR** | Docker image registry |
+| **ElastiCache** | Redis for caching and Celery broker |
+
+## Application stack
+
+```
+CloudFront (CDN)
+    │
+Route53 (DNS)
+    │
+Elastic Beanstalk
+    ├── uWSGI (WSGI server)
+    │   └── Flask Application
+    ├── Celery Workers (background tasks)
+    │   └── Redis Broker (ElastiCache)
+    └── PostgreSQL (RDS)
+```
+
+## Production configuration
+
+Key production settings from `config.py`:
+
+| Setting | Value |
+|---------|-------|
+| WSGI server | uWSGI via `application.ini` |
+| APM | New Relic |
+| Error tracking | Sentry |
+| DB connection pool | 16 connections |
+| Cache | Redis with SSL |
+| Static assets | Served via CloudFront CDN |
+
+## Monitoring
+
+- **New Relic** - Application performance monitoring, transaction tracing
+- **Sentry** - Error tracking and alerting
+- **CloudWatch** - AWS infrastructure metrics
+- **Codecov** - Test coverage tracking

@@ -1,0 +1,64 @@
+---
+title: "Docker"
+description: "Docker configuration for development, testing, and production."
+---
+
+## Docker Compose files
+
+| File | Purpose |
+|------|---------|
+| `docker-compose.dev.yml` | Local development |
+| `docker-compose.test.yml` | Test execution |
+| `docker-compose.ci.yml` | CI/CD pipeline |
+
+## Development
+
+The development container includes Python 3.12, Node.js 18, and all dependencies:
+
+```bash
+make build    # Build containers
+make dev      # Start development environment
+make stop     # Stop containers
+make logs     # View container logs
+```
+
+The development Dockerfile (`Dockerfile.dev`) installs both Python and Node.js dependencies, sets up Spanish localization (`es_ES.UTF-8`), and runs Flask with debug mode enabled on port 5000.
+
+## Testing
+
+Run tests inside Docker:
+
+```bash
+make test                                  # All tests, quiet
+make testv                                 # Verbose output
+make testdir DIR=tests/modules/coupons/    # Specific directory
+```
+
+Or directly with docker-compose:
+
+```bash
+docker compose -f docker-compose.test.yml run --rm web pytest -v
+```
+
+## Production
+
+The production container uses a pre-built base image from ECR, runs behind uWSGI, and includes New Relic APM:
+
+```dockerfile
+FROM 545451994776.dkr.ecr.us-east-1.amazonaws.com/encuadrado/encuadrado-web-base:latest
+WORKDIR /app
+COPY . .
+EXPOSE 8000
+CMD ["newrelic-admin", "run-program", "uwsgi", "--ini", "application.ini"]
+```
+
+## Environment variables
+
+Configuration is loaded from `.env` files. See `env.example` for the full list of required variables. Key categories:
+
+- **Database**: `DATABASE_URL_ENCUADRADO`
+- **Cache**: `CACHE_TYPE`, Redis connection
+- **AWS**: S3 buckets, credentials
+- **Payment providers**: Stripe, Transbank, MercadoPago keys
+- **Email**: SMTP configuration
+- **Sentry**: DSN for error tracking

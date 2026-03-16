@@ -1,0 +1,65 @@
+---
+title: "API overview"
+description: "Overview of the Encuadrado Web API structure and conventions."
+---
+
+## Base URL
+
+```
+https://encuadrado.com
+```
+
+Development: `http://localhost:5000`
+
+## Authentication
+
+Most API endpoints require session authentication via the `@requires_auth_2` decorator. Some endpoints use JWT tokens for mobile and API access.
+
+## Response format
+
+API responses follow a consistent structure:
+
+```json
+{
+  "data": { },
+  "meta": { "status": "success" },
+  "errors": []
+}
+```
+
+Error responses:
+
+```json
+{
+  "error": {
+    "message": "Resource not found",
+    "code": 404
+  }
+}
+```
+
+## API versions
+
+| Version | Prefix | Location |
+|---------|--------|----------|
+| Legacy | Various | `encuadrado_web/` (top-level routes) |
+| v1 | `/api/v1` | `encuadrado_web/api_v1/` |
+| Modules | Various | `encuadrado_web/modules/[feature]/routes.py` |
+| Mobile | Various | `encuadrado_web/app_mobile/` |
+
+## Common middlewares
+
+| Decorator | Purpose |
+|-----------|---------|
+| `@requires_auth_2` | Requires authenticated session |
+| `@requires_valid_user` | Validates user and injects `user` param |
+| `@requires_existing_booking` | Validates booking exists |
+| `@validates_query_fields` | Validates query parameters |
+
+## Rate limiting
+
+Rate limiting is handled at the infrastructure level via AWS.
+
+## CORS
+
+CORS is configured for specific endpoint patterns to allow cross-origin requests from the frontend. Credentials are supported for authenticated endpoints.

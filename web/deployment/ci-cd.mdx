@@ -1,0 +1,57 @@
+---
+title: "CI/CD"
+description: "Continuous integration and deployment pipeline."
+---
+
+## GitHub Actions
+
+### Test workflow
+
+Runs automatically on:
+- Pull request creation, updates, or reopening
+- Pushes to `main` and `development` branches
+
+The workflow:
+1. Builds the test container using `docker-compose.test.yml`
+2. Runs `pytest -v`
+3. Reports results as a deployment status check
+4. Adds a comment to the PR with test results
+
+### Workflow files
+
+| File | Purpose |
+|------|---------|
+| `.github/workflows/tests-flask.yml` | Python test suite |
+| `.github/workflows/tests-react.yml` | JavaScript test suite |
+| `.github/workflows/create-issue-on-pr-review-comment.yml` | Auto-create issues from review comments |
+
+## AWS CodeBuild
+
+Build specifications:
+- `buildspec.yml` - Production build
+- `buildspec.test.yml` - Test build
+
+## Deployment checklist
+
+### Pre-deployment
+
+- Run all tests
+- Check code coverage
+- Review security settings
+- Backup database
+- Update changelog
+
+### Deployment
+
+- Tag release version
+- Deploy to staging
+- Run smoke tests
+- Deploy to production
+- Verify deployment
+
+### Post-deployment
+
+- Monitor application metrics (New Relic)
+- Check error rates (Sentry)
+- Verify database performance
+- Update documentation

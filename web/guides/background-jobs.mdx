@@ -1,0 +1,88 @@
+---
+title: "Background jobs"
+description: "Celery task queues, scheduled tasks, and async processing."
+---
+
+## Overview
+
+Background jobs run on **Celery** with a **Redis** broker. Tasks are defined in `modules/[feature]/tasks.py` and use the `@shared_task` decorator with a dedicated queue.
+
+## Task queues
+
+| Queue | Purpose |
+|-------|---------|
+| `celery` | Default queue |
+| `tracker` | Analytics and tracking events |
+| `booking_notifications` | Booking confirmation and reminder notifications |
+| `push_notifications` | Mobile push notifications |
+| `email_notifications` | Email sending |
+| `whatsapp_notifications` | WhatsApp messages |
+| `invoice_issuing` | Invoice generation |
+| `invoice_health_insurance_reimbursement_requests` | Insurance claim processing |
+| `fonasa_bonds` | FONASA bond processing |
+| `fonasa_bonds_monthly_invoices` | Monthly FONASA invoice generation |
+| `rnpi` | Professional verification (Registro Nacional) |
+| `reconciliator` | Payment reconciliation |
+| `transbank_secondary_commerce_creation` | Transbank merchant setup |
+| `update_sii_session_cookies` | SII (tax authority) session management |
+| `logs` | Log processing |
+| `fintoc_mx_inbound_transfer_matching` | Fintoc MX inbound transfer matching |
+
+## Writing tasks
+
+```python
+from celery import shared_task
+
+@shared_task(queue='booking_notifications')
+def send_booking_confirmation(booking_id):
+    booking = BookingModel.query.get(booking_id)
+    if not booking:
+        return
+
+    # Send confirmation logic...
+```
+
+Place tasks in the module's `tasks.py` file and assign them to the appropriate queue.
+
+## Scheduled tasks (Celery Beat)
+
+Production scheduled tasks configured in `config.py`:
+
+| Task | Schedule | Description |
+|------|----------|-------------|
+| User identification | Daily 5:00 AM | Identify and categorize users |
+| RNPI verification | Daily 5:30 AM | Verify new users against national registry |
+| Auto-reconciliation | Every 5 minutes | Reconcile payment transactions |
+| FONASA monthly invoices | 3rd of month, 5:00 AM | Generate monthly FONASA invoices |
+| Transbank commerce | Mon-Thu 12:00 PM | Create secondary Transbank commerce entries |
+| SII session cookies | Daily 11:50 AM | Refresh SII session cookies |
+
+## Task patterns
+
+### Idempotent tasks
+
+Design tasks to be safe to retry:
+
+```python
+@shared_task(queue='email_notifications', max_retries=3)
+def send_email(email_id):
+    email = EmailModel.query.get(email_id)
+    if not email or email.sent:
+        return  # Already sent or doesn't exist
+
+    # Send and mark as sent
+    deliver_email(email)
+    email.sent = True
+    db.session.commit()
+```
+
+### Chaining tasks
+
+For multi-step workflows, call tasks sequentially from the first:
+
+```python
+@shared_task(queue='booking_notifications')
+def process_booking_notifications(booking_id):
+    send_booking_confirmation.delay(booking_id)
+    send_provider_notification.delay(booking_id)
+```

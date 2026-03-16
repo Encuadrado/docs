@@ -1,0 +1,134 @@
+---
+title: "Module pattern"
+description: "How feature code is organized into self-contained modules."
+---
+
+## Structure
+
+Each feature lives in `encuadrado_web/modules/[feature]/` with a consistent structure:
+
+```
+modules/[feature]/
+├── __init__.py       # Module initialization
+├── routes.py         # Flask Blueprint with API endpoints
+├── services/         # Business logic (or services.py for small modules)
+│   ├── __init__.py
+│   └── [domain].py
+├── serializer.py     # Data transformation for API responses
+├── tasks.py          # Celery background tasks
+├── middlewares.py    # Route decorators
+├── helpers.py        # Module-specific utilities
+└── signals.py        # Event handlers (optional)
+```
+
+<Note>
+Use a single `services.py` file for small modules. Switch to a `services/` directory when the logic grows complex enough to warrant splitting.
+</Note>
+
+## Components
+
+### Routes
+
+Each module exposes a Flask Blueprint registered in the app factory:
+
+```python
+from flask import Blueprint, jsonify, request
+from .serializer import UserSerializer
+from .services.subscription import SubscriptionService
+
+api = Blueprint('user_api', __name__)
+
+@api.route('/users/<int:user_id>', methods=['GET'])
+def get_user(user_id):
+    user = UserModel.get_by_id(user_id)
+    return jsonify(UserSerializer.one(user))
+```
+
+### Services
+
+Business logic lives in service classes with static methods:
+
+```python
+class SubscriptionService:
+    @staticmethod
+    def get_active_subscription(user_id: int) -> Optional[Subscription]:
+        return Subscription.query.filter_by(
+            user_id=user_id,
+            status='active'
+        ).first()
+
+    @staticmethod
+    def create_subscription(user_id: int, plan_id: int) -> Subscription:
+        subscription = Subscription(user_id=user_id, plan_id=plan_id, status='active')
+        db.session.add(subscription)
+        db.session.commit()
+        return subscription
+```
+
+### Serializers
+
+Transform model instances into API response dictionaries:
+
+```python
+class UserSerializer:
+    @staticmethod
+    def one(user: UserModel, only=None, include=None) -> dict:
+        schema = UserSchema(only=only)
+        schema.context = {'include': include, 'instance': user}
+        return schema.dump(user)
+
+    @staticmethod
+    def many(users, only=None, include=None) -> List[dict]:
+        schema = UserSchema(only=only, many=True)
+        schema.context = {'include': include, 'instances': users}
+        return schema.dump(users)
+```
+
+### Middlewares
+
+Route decorators for cross-cutting concerns. Common decorators from `encuadrado_web/modules/middlewares.py`:
+
+| Decorator | Purpose |
+|-----------|---------|
+| `@requires_auth_2` | Session authentication |
+| `@requires_valid_user` | Validates user and injects `user` parameter |
+| `@requires_existing_booking` | Validates booking exists |
+| `@validates_query_fields` | Query parameter validation |
+
+### Tasks
+
+Celery background tasks with dedicated queues:
+
+```python
+from celery import shared_task
+
+@shared_task(queue='booking_notifications')
+def send_booking_confirmation(booking_id):
+    booking = BookingModel.query.get(booking_id)
+    # Send notification...
+```
+
+## Module list
+
+The 72 backend modules organized by domain:
+
+<Tabs>
+  <Tab title="Core">
+    `users`, `bookings`, `services`, `patients`, `centers`, `sessions_package`, `service_groups`, `service_variations`, `available_time_slots`, `confirmations`, `waiting_list`
+  </Tab>
+  <Tab title="Payments">
+    `payment`, `transactions`, `coupons`, `stripe`, `mercado_pago`, `transbank_psp`, `fintoc`, `openpay`, `sumup`, `bci_payins`, `apple_pay`, `payouts`, `wire_transfers`, `user_payment_methods`
+  </Tab>
+  <Tab title="Clinical">
+    `prescriptions`, `patient_records`, `intake_forms`, `isapres`, `fonasa_bonds`, `fonasa_onboarding`
+  </Tab>
+  <Tab title="Invoicing">
+    `invoicing`, `reconciliator`
+  </Tab>
+  <Tab title="Communication">
+    `communications`, `emails`, `announcements`, `polls`, `recall`, `user_campaigns`
+  </Tab>
+  <Tab title="Other">
+    `ai`, `analytics_and_reports`, `copilot`, `courses`, `files`, `gcal_events`, `google_reserve`, `intercom`, `onboarding`, `photos`, `professional_profiles`, `reviews`, `search`, `showcase`, `subscription`, `track`, `transcription`, `video`, `countries`
+  </Tab>
+</Tabs>

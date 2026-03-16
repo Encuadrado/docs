@@ -1,0 +1,37 @@
+---
+title: "Prescriptions"
+description: "Digital prescription management and medication tracking."
+---
+
+## Module location
+
+- **Routes**: `encuadrado_web/modules/prescriptions/routes.py`
+- **Services**: `encuadrado_web/modules/prescriptions/services/`
+
+## Overview
+
+The prescriptions module enables healthcare professionals to create, manage, and issue digital prescriptions. Includes medication database integration and reusable templates.
+
+## Key models
+
+| Model | Description |
+|-------|-------------|
+| `PrescriptionModel` | Individual prescriptions |
+| `PrescriptionTemplateModel` | Reusable prescription templates |
+| `PrescriptionMedicationModel` | Medications within a prescription |
+| `VademecumDrugModel` | Drug database (vademecum) |
+
+## Features
+
+- Digital prescription creation and issuance
+- Medication search from drug database
+- Reusable prescription templates
+- Certificate enrollment and issuance
+- PDF generation for printing
+
+## Frontend components
+
+- `prescriptions` - Prescription management UI
+- `prescriptionTemplates` - Template editor
+- `prescriptionCertificateEnrollment` - Certificate enrollment flow
+- `prescriptionsIssuance` - Issuance workflow

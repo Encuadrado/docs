@@ -1,0 +1,94 @@
+---
+title: "Frontend"
+description: "React components, Webpack bundling, and Jinja2 template integration."
+---
+
+## Overview
+
+The frontend uses a hybrid approach: React 18 components are bundled by Webpack and rendered into Jinja2 server-side templates. Some pages also use vanilla JavaScript.
+
+## React components
+
+Components live in `encuadrado_web/static/jsx/[feature]/`, each with an `index.jsx` entry point. Webpack auto-discovers these and bundles them to `static/dist/[feature].bundle.js`.
+
+```
+static/jsx/
+├── calendar/           # Calendar and scheduling UI
+│   └── index.jsx
+├── payment/            # Payment flow
+│   └── index.jsx
+├── patientRecords/     # Clinical records
+│   └── index.jsx
+├── search/             # Search and discovery
+│   └── index.jsx
+├── utils/              # Shared utility functions
+└── ...                 # 140+ component bundles
+```
+
+### Component categories
+
+<Tabs>
+  <Tab title="Scheduling">
+    `calendar`, `customerSchedulingIntent`, `offeredSchedulesCalendar`, `offeredSchedulesModal`, `specificSchedules`, `specScheduleDatePickers`, `scheduleConfig`, `scheduleConfigCalendar`
+  </Tab>
+  <Tab title="Payments">
+    `payment`, `paymentFlow`, `payinsHistory`, `payoutExplainerModal`, `paywallModal`, `prepaymentSummaryInfo`, `showcasePayment`, `subscription`, `subscriptionPlans`, `pricingTable`
+  </Tab>
+  <Tab title="Clinical">
+    `patientHistory`, `patientRecords`, `patientRecordTemplates`, `patientReferrals`, `prescriptions`, `prescriptionTemplates`, `issueExamOrder`
+  </Tab>
+  <Tab title="Admin">
+    `centerReport`, `centerTeam`, `centerPermissionsModal`, `editServiceScheduleConfig`, `editServicesPositions`, `massEmailsSent`
+  </Tab>
+  <Tab title="User">
+    `profiles`, `professionalProfile`, `navbar`, `onboardingLastView`, `activationChecklist`, `awards`
+  </Tab>
+</Tabs>
+
+## Webpack configuration
+
+Webpack auto-discovers entry points by scanning `static/jsx/` for directories containing `index.jsx`:
+
+```javascript
+// webpack.config.js (simplified)
+const entries = {};
+fs.readdirSync('encuadrado_web/static/jsx/').forEach(dir => {
+  if (fs.existsSync(`encuadrado_web/static/jsx/${dir}/index.jsx`)) {
+    entries[dir] = `./encuadrado_web/static/jsx/${dir}/index.jsx`;
+  }
+});
+```
+
+Output: `static/dist/[feature].bundle.js`
+
+## Jinja2 integration
+
+React bundles are loaded into server-rendered Jinja2 templates:
+
+```html
+<!-- In a Jinja2 template -->
+<div id="react-root"></div>
+<script src="{{ url_for('static', filename='dist/calendar.bundle.js') }}"></script>
+```
+
+Server-side data is passed to React via template variables or data attributes.
+
+## Development
+
+```bash
+npm run watch    # Webpack dev server with hot reload
+npm run build    # Production build
+npm run test     # Run Vitest tests
+```
+
+## Formatting
+
+JavaScript and JSX files are formatted with Biome:
+
+```bash
+npx @biomejs/biome format encuadrado_web/static/jsx/
+```
+
+## Shared utilities
+
+Common functions live in `static/jsx/utils/` and are imported across components. These include API helpers, date formatting, currency formatting, and form validation utilities.

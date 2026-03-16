@@ -1,0 +1,143 @@
+---
+title: "Testing"
+description: "Testing conventions, patterns, and how to write tests for Encuadrado Web."
+---
+
+## Framework
+
+Tests use **pytest** with these plugins:
+- **pytest-describe** - BDD-style `describe_`/`it_` test structure
+- **pytest-spec** - Readable test output
+- **pytest-mock** - `mocker` fixture for patching
+- **Vitest** - JavaScript/JSX tests
+
+## Directory structure
+
+Tests mirror the application structure:
+
+```
+tests/
+├── conftest.py              # Shared fixtures (app, client, db)
+├── helpers.py               # Test utilities
+├── mocks/                   # Shared mock objects
+├── modules/                 # Module-specific tests
+│   └── [feature]/
+│       ├── conftest.py      # Re-exports fixtures
+│       ├── fixtures.py      # Domain fixtures
+│       ├── mocks.py         # Module-specific mocks
+│       └── test_services.py # Test files
+├── bookingapi/
+├── models/
+├── userapi/
+└── ...
+```
+
+## Test conventions
+
+### Naming pattern
+
+All new tests **must** use the `describe_`/`it_` pattern:
+
+```python
+def describe_calculate_price():
+    def describe_with_fixed_discount():
+        def it_subtracts_amount(make_coupon):
+            coupon = make_coupon(discount_type='fixed', discount_amount=1000)
+            assert coupon.calculate_price_with_discount(5000) == 4000
+
+    def describe_with_percentage_discount():
+        def it_applies_percentage(make_coupon):
+            coupon = make_coupon(discount_type='percentage', discount_amount=20)
+            assert coupon.calculate_price_with_discount(5000) == 4000
+```
+
+- **Files**: `test_*.py`
+- **Top-level**: `describe_[method_or_feature]`
+- **Nested**: `describe_[scenario]`
+- **Tests**: `it_[expected_behavior]`
+
+### Test types
+
+<Tabs>
+  <Tab title="Unit tests">
+    Mock the database and external dependencies:
+
+    ```python
+    @pytest.mark.unit
+    def describe_format_rut():
+        def it_formats_with_dots_and_dash():
+            assert format_rut('123456789') == '12.345.678-9'
+    ```
+
+    Use the `prevent_database_access` fixture to ensure no DB calls.
+  </Tab>
+  <Tab title="Integration tests">
+    Use real database via the `db` fixture:
+
+    ```python
+    def describe_create_booking():
+        def it_persists_to_database(db, make_user, make_service):
+            user = make_user()
+            service = make_service(user_id=user.id)
+            booking = BookingService.create(user_id=user.id, service_id=service.id)
+            assert BookingModel.query.get(booking.id) is not None
+    ```
+  </Tab>
+</Tabs>
+
+### Fixtures
+
+**Shared fixtures** in `tests/conftest.py`:
+- `app` - Flask test application
+- `client` - Test HTTP client
+- `db` - Database session with cleanup
+
+**Domain fixtures** in `tests/modules/[feature]/fixtures.py`:
+- Factory fixtures like `make_coupon`, `make_transaction` for creating test data with sensible defaults
+
+```python
+# fixtures.py
+@pytest.fixture
+def make_coupon(db):
+    def _make(discount_type='fixed', discount_amount=1000, **kwargs):
+        coupon = CouponModel(discount_type=discount_type, discount_amount=discount_amount, **kwargs)
+        db.session.add(coupon)
+        db.session.commit()
+        return coupon
+    return _make
+```
+
+### Mocking
+
+Use `mocker.patch()` from pytest-mock. Do **not** use `@patch` decorators:
+
+```python
+def it_sends_email(mocker):
+    mock_send = mocker.patch('encuadrado_web.modules.emails.services.send_email')
+    BookingService.confirm(booking_id=1)
+    mock_send.assert_called_once()
+```
+
+## Running tests
+
+```bash
+make test                                  # All tests, quiet
+make testv                                 # Verbose BDD-style output
+make testv ARGS=tests/modules/coupons/     # Specific directory
+make testdir DIR=tests/modules/coupons/test_services.py  # Specific file
+```
+
+### JavaScript tests
+
+```bash
+npm run test    # Run Vitest
+```
+
+## Best practices
+
+- Follow the **Arrange-Act-Assert** pattern
+- One assertion per `it_` function when possible
+- Use factory fixtures over hardcoded test data
+- Mock external services (Stripe, email, WhatsApp)
+- Use `prevent_database_access` for pure unit tests
+- Keep fixtures close to where they're used (in `fixtures.py`, not `conftest.py`)

@@ -1,0 +1,313 @@
+---
+title: "Invoicing"
+description: "Chilean tax document generation, SII integration, FONASA bonds, and payment reconciliation."
+---
+
+## Overview
+
+The invoicing system handles Chilean tax document (DTE) generation, submission to the SII (Servicio de Impuestos Internos), FONASA health insurance bond processing, and automated payment reconciliation. It supports multiple document types and integrates with external providers like Facturapi for Mexican invoicing.
+
+## Module locations
+
+| Path | Purpose |
+|------|---------|
+| `modules/invoicing/` | Core invoicing logic, routes, SII integration |
+| `modules/invoicing/issuing/` | Invoice emission tasks and signals |
+| `modules/invoicing/sii/` | SII connection and session management |
+| `modules/reconciliator/` | Payment-to-booking matching |
+| `modules/fonasa_bonds/` | FONASA health insurance bonds |
+| `encuadrado_web/boletas.py` | Boleta de honorarios implementation |
+| `encuadrado_web/boleta_exenta.py` | Boleta exenta implementation |
+| `encuadrado_web/factura_exenta.py` | Factura exenta (DTE) |
+| `encuadrado_web/factura_afecta.py` | Factura afecta (with IVA) |
+| `encuadrado_web/nota_de_credito.py` | Credit notes for voiding |
+
+## Document types
+
+The system issues multiple Chilean tax document types depending on the professional's configuration:
+
+| Document | Code | Description | Requirements |
+|----------|------|-------------|-------------|
+| **Boleta de honorarios** | `boleta-honorarios` | Professional services receipt | SII credentials (RUT + tax password) |
+| **Boleta exenta** | `boleta-exenta` | Tax-exempt receipt | `rut_empresa_boletas_exentas` on user profile |
+| **Factura exenta** | `factura-exenta` | Tax-exempt invoice (DTE) | Digital certificate (`cert_password`) |
+| **Factura afecta** | `factura-afecta` | Taxable invoice (with IVA) | Digital certificate + IVA registration |
+| **Boleta exenta Encuadrado** | `boleta-exenta-encuadrado` | Encuadrado-issued tax-exempt | Internal issuance |
+| **Factura afecta Encuadrado** | `factura-afecta-encuadrado` | Encuadrado-issued taxable invoice | Internal issuance |
+| **Facturapi receipt** | `facturapi-receipt` | Mexican receipt | Facturapi API key |
+| **Facturapi invoice** | `facturapi-invoice` | Mexican invoice | Facturapi API key |
+
+## Models
+
+| Model | Description |
+|-------|-------------|
+| `BoletaHonorariosModel` | Core invoice document linking bookings to tax receipts. Stores RUT, amounts, barcode, void data (JSONB), and Facturapi references |
+| `EncuadradoInvoiceModel` | Internal invoices for subscriptions and commissions. Links to PDF via `FileModel` |
+| `FonasaInvoiceModel` | Monthly FONASA invoices grouping multiple bonds |
+
+---
+
+## Invoice lifecycle
+
+```
+Payment Received
+       │
+       ▼
+Signal: payment_received
+       │
+       ▼
+Celery Task: issue_invoice (queue: invoice_issuing)
+       │
+       ▼
+BookingModel.invoicing_depending_on_type()
+       │
+       ├── Has rut_empresa_boletas_exentas? → Boleta exenta (AWS/S3)
+       ├── Has cert_password? → Factura exenta/afecta (DTE + SII)
+       ├── Has Facturapi config? → Facturapi receipt
+       └── Fallback → Boleta de honorarios (SII web portal)
+       │
+       ▼
+Document Created → PDF Generated → Emailed to Patient
+```
+
+### 1. Payment trigger
+
+When a payment is received, the `payment_received` signal from `invoice_issuing_signals` fires and enqueues the invoice task:
+
+```python
+# modules/invoicing/issuing/signals.py
+issue_invoice.delay(booking_id, booking_ids)
+```
+
+### 2. Document type selection
+
+`BookingModel.invoicing_depending_on_type()` dispatches to the correct emission method based on the professional's configuration:
+
+<Tabs>
+  <Tab title="Boleta exenta">
+    **Requires**: `rut_empresa_boletas_exentas` on the professional's profile.
+
+    Uses AWS-hosted authorization endpoint. PDF is stored on S3, barcode saved to the model.
+  </Tab>
+  <Tab title="Factura exenta (DTE)">
+    **Requires**: Digital certificate (`cert_password`).
+
+    Full DTE flow: XML document construction, digital signing, SII submission. Supports batch invoicing (multiple bookings in one invoice).
+  </Tab>
+  <Tab title="Factura afecta">
+    **Requires**: Digital certificate + IVA registration.
+
+    Single booking per invoice. Includes 19% IVA calculation.
+  </Tab>
+  <Tab title="Boleta de honorarios">
+    **Fallback** when no other requirements are met.
+
+    Uses SII session cookies to submit via SII web portal. Legacy method.
+  </Tab>
+  <Tab title="Facturapi (Mexico)">
+    **Requires**: Facturapi API configuration.
+
+    Issues receipt via Facturapi API. Supports auto-invoice where patients can self-invoice from an interactive PDF link.
+  </Tab>
+</Tabs>
+
+### 3. Delivery
+
+Invoices are delivered via:
+- **Email**: PDF attachment via SES (`ses_send_mass_email`)
+- **WhatsApp**: Notification via Twilio Content API
+- **Facturapi auto-invoice**: Interactive PDF link sent to patient
+
+---
+
+## Voiding invoices (credit notes)
+
+Each document type has a specific voiding process. Voiding an invoice issues a **nota de credito** (credit note) that reverses the original amounts.
+
+```
+Invoice Void Request
+       │
+       ▼
+BoletaHonorariosModel.void()
+       │
+       ├── boleta-exenta → NotaDeCreditoEnBlanco (blank credit note)
+       ├── factura-exenta → NotaDeCredito (full credit note, digitally signed)
+       ├── facturapi-receipt → Facturapi API cancellation
+       ├── facturapi-invoice → Not yet supported (raises exception)
+       └── boleta-honorarios → SII web portal void endpoint
+```
+
+### Voiding reasons (SII codes)
+
+| Code | Reason |
+|------|--------|
+| 1 | No payment made |
+| 2 | Service not provided |
+| 3 | Typing error |
+
+### Void data structure
+
+When an invoice is voided, the `void_data` JSONB field is populated:
+
+```json
+{
+  "date": "2026-03-05 12:34:56.789",
+  "reason": "3",
+  "source": "encuadrado",
+  "url_dte": "https://...",
+  "nro_nota_de_credito": "123456"
+}
+```
+
+---
+
+## SII integration
+
+### Connection
+
+The `SiiConnection` class (`modules/invoicing/sii/connection.py`) handles authentication with the SII:
+
+- Authenticates with RUT + tax password
+- Manages session cookies
+- Supports concurrent sessions for bulk operations
+- Auth endpoint: `https://zeusr.sii.cl/cgi_AUT2000/CAutInicio.cgi`
+
+### Token refresh
+
+Boleta exenta tokens expire periodically. An AWS EventBridge event (`should-renew-boleta-exenta-token`) triggers token renewal via the `enc-refresh-token-exenta-bus` event bus.
+
+### SII session cookies
+
+A scheduled Celery task refreshes SII session cookies daily at 11:50 AM to maintain active sessions for invoice operations.
+
+---
+
+## FONASA bond processing
+
+FONASA bonds are health insurance reimbursement documents for Chile's public health system.
+
+### Bond lifecycle
+
+<Steps>
+  <Step title="Creation">
+    `BonoFonasaModel.init_from_booking()` starts the process:
+    - `iniciar_encuentro()` - Start clinical encounter with FONASA
+    - `buscar_beneficiario()` - Verify patient is a FONASA beneficiary
+    - Send verification code to patient (email/WhatsApp)
+  </Step>
+  <Step title="Valorization">
+    Patient validates identity with the verification code:
+    - `valoriza_bono(ci_validation)` - Patient identity confirmation
+    - `buscar_prestacion_medica()` - Look up medical service code
+    - `valorizar_encuentro()` - Calculate FONASA copayment amount
+  </Step>
+  <Step title="Payment confirmation">
+    - `confirmar_pago()` - Confirm payment with FONASA
+    - Triggers invoice emission if configured
+  </Step>
+  <Step title="Care registration">
+    After the appointment occurs:
+    - `registrar_atencion()` - Register that care was delivered
+    - Must occur after booking date/time
+  </Step>
+</Steps>
+
+### Bond cancellation
+
+- `devolver_bono()` - Return the bond
+- `anular_pago()` - Cancel payment (same day only)
+
+### Monthly FONASA invoicing
+
+A scheduled task runs on the 3rd of each month at 5:00 AM:
+
+```python
+@shared_task(queue='fonasa_bonds_monthly_invoices')
+def issue_fonasa_invoices_for_all_users():
+    # Generates invoices for last month's confirmed bonds
+```
+
+---
+
+## Payment reconciliation
+
+The reconciliator matches bank transfers to bookings and creates transactions.
+
+### Workflow
+
+```
+Bank Transfer Received (BCI)
+       │
+       ▼
+Validate RUT + Amount
+       │
+       ▼
+Match to Booking(s)
+       │
+       ▼
+Create Transaction
+       │
+       ▼
+Emit Invoice → Send Confirmation
+```
+
+### Auto-reconciliation
+
+Runs every 5 minutes via Celery Beat:
+
+```python
+@shared_task(queue='reconciliator')
+def run_autoreconciler():
+    # Reconciles all pending BCI transfers
+```
+
+### API endpoints
+
+```
+GET  /api/v2/reconciliator/get-attempts-and-bookings-related-to-rut/<rut>
+POST /api/v2/reconciliator/run-reconciler/pay
+POST /api/v2/reconciliator/run-reconciler/refund
+POST /api/v2/reconciliator/reconcile-transfers
+POST /api/v2/reconciliator/bookings/emit-invoices
+POST /api/v2/reconciliator/bookings/<id>/transferencia-done
+```
+
+### Error handling
+
+| Exception | Cause |
+|-----------|-------|
+| `TransferAlreadyUsedError` | Transfer was already reconciled |
+| `TransferAmountMismatchError` | Amount doesn't match booking |
+| `BookingAlreadyPaidError` | Booking was already paid |
+| `BonoFonasaMustBeHandledByPatientError` | FONASA bonds require patient-side payment |
+
+---
+
+## Background tasks
+
+| Queue | Task | Schedule |
+|-------|------|----------|
+| `invoice_issuing` | `issue_invoice` | On payment received (signal) |
+| `fonasa_bonds` | `fonasa_bond_confirm_payment` | On bond confirmation |
+| `fonasa_bonds_monthly_invoices` | `issue_fonasa_invoices_for_all_users` | 3rd of month, 5:00 AM |
+| `reconciliator` | `run_autoreconciler` | Every 5 minutes |
+| `update_sii_session_cookies` | SII session refresh | Daily 11:50 AM |
+
+## API endpoints
+
+### Invoice history
+
+```
+GET /api/v2/invoices/
+```
+
+Returns paginated invoice history for the authenticated user. Each entry includes booking details, boleta amounts, `nro_boleta`, and void data.
+
+## Data validation
+
+The invoicing module sanitizes text before SII submission:
+
+- `remove_accents_and_tilde()` - Strips special characters
+- `remove_emojis_from_string()` - Removes emojis from descriptions
+- `remove_newlines_and_extra_spaces()` - Normalizes whitespace
+- Chilean commune code validation (mapping 1201-9101) for DTE address fields

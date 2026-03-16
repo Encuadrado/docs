@@ -1,0 +1,40 @@
+---
+title: "Communications"
+description: "Multi-channel messaging: email, WhatsApp, and push notifications."
+---
+
+## Module location
+
+- **Routes**: `encuadrado_web/modules/communications/routes.py`
+- **Services**: `encuadrado_web/modules/communications/services/`
+
+## Overview
+
+The communications module provides a unified interface for sending messages across multiple channels. It tracks delivery status and supports replies.
+
+## Channels
+
+| Channel | Model | Task queue |
+|---------|-------|------------|
+| Email | `EmailCommunicationModel` | `email_notifications` |
+| WhatsApp | `WhatsAppCommunicationModel` | `whatsapp_notifications` |
+| Push | `PushCommunicationModel` | `push_notifications` |
+
+## Key models
+
+| Model | Description |
+|-------|-------------|
+| `CommunicationModel` | Base communication entity |
+| `EmailCommunicationModel` | Email-specific data |
+| `WhatsAppCommunicationModel` | WhatsApp message data |
+| `PushCommunicationModel` | Push notification data |
+| `CommunicationRepliesModel` | Reply tracking |
+
+## Related modules
+
+| Module | Purpose |
+|--------|---------|
+| `emails` | Email template management |
+| `announcements` | Broadcast announcements |
+| `user_campaigns` | Marketing campaigns |
+| `recall` | Patient recall/follow-up messages |

@@ -1,0 +1,82 @@
+---
+title: "Contributing"
+description: "How to contribute to the Encuadrado Web codebase."
+---
+
+## Branch naming
+
+All branches must follow this format:
+
+```
+<dev-name>/<type>/<name-of-branch>
+```
+
+| Type | Purpose |
+|------|---------|
+| `feat` | New feature |
+| `fix` | Bug fix |
+| `iter` | Iteration on existing feature |
+| `chore` | Maintenance, dependency updates |
+
+Example: `john/feat/user-authentication`
+
+## Pull requests
+
+- All changes must go through pull requests
+- Follow the PR template in `.github/pull_request_template.md`
+- Add appropriate labels
+- Request reviews from relevant team members
+
+## Adding a new module
+
+<Steps>
+  <Step title="Create the module directory">
+    ```bash
+    mkdir -p encuadrado_web/modules/my_feature/services
+    touch encuadrado_web/modules/my_feature/__init__.py
+    touch encuadrado_web/modules/my_feature/routes.py
+    touch encuadrado_web/modules/my_feature/services/__init__.py
+    touch encuadrado_web/modules/my_feature/serializer.py
+    ```
+  </Step>
+  <Step title="Define the Blueprint">
+    ```python
+    # routes.py
+    from flask import Blueprint, jsonify
+
+    api = Blueprint('my_feature_api', __name__)
+
+    @api.route('/my-feature', methods=['GET'])
+    def list_items():
+        return jsonify([])
+    ```
+  </Step>
+  <Step title="Register in the app factory">
+    Add the blueprint import and registration in `encuadrado_web/__init__.py`:
+    ```python
+    from encuadrado_web.modules.my_feature.routes import api as my_feature_api
+    app.register_blueprint(my_feature_api)
+    ```
+  </Step>
+  <Step title="Create tests">
+    ```bash
+    mkdir -p tests/modules/my_feature
+    touch tests/modules/my_feature/conftest.py
+    touch tests/modules/my_feature/fixtures.py
+    touch tests/modules/my_feature/test_services.py
+    ```
+  </Step>
+</Steps>
+
+## CI/CD
+
+GitHub Actions runs automatically on:
+- Pull request creation, updates, or reopening
+- Pushes to `main` and `development` branches
+
+The workflow builds the test container and runs `pytest -v`. Results appear in the PR's "Checks" tab.
+
+## Communication
+
+- `#software-engineering` or `#product-team` Slack channels
+- Tag `@engineering-team` in Slack for visibility

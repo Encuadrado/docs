@@ -1,0 +1,31 @@
+---
+title: "Notifications"
+description: "Booking notifications, reminders, and automated messaging."
+---
+
+## Overview
+
+Notifications are sent automatically at key points in the booking lifecycle and for other platform events. They are processed asynchronously via Celery task queues.
+
+## Notification triggers
+
+| Event | Channels | Queue |
+|-------|----------|-------|
+| Booking confirmed | Email, WhatsApp, Push | `booking_notifications` |
+| Booking reminder | Email, WhatsApp, Push | `booking_notifications` |
+| Booking cancelled | Email | `email_notifications` |
+| Payment received | Email | `email_notifications` |
+| New patient | Email | `email_notifications` |
+
+## Task queues
+
+| Queue | Purpose |
+|-------|---------|
+| `booking_notifications` | Booking lifecycle messages |
+| `email_notifications` | General email delivery |
+| `whatsapp_notifications` | WhatsApp message delivery |
+| `push_notifications` | Mobile push notifications |
+
+## Configuration
+
+Notification preferences are managed per user and per service. Professionals can configure which notifications are sent for each service type.

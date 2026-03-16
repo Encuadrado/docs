@@ -1,0 +1,113 @@
+---
+title: "Quickstart"
+description: "Get the Encuadrado Web application running locally in minutes."
+---
+
+## Prerequisites
+
+- Docker Desktop (recommended) or Python 3.12
+- Node.js 18+ (for frontend builds)
+- A `.env` file with required environment variables (ask the team for a template)
+
+## With Docker (recommended)
+
+<Steps>
+  <Step title="Install Docker Desktop">
+    ```bash
+    brew install --cask docker
+    ```
+  </Step>
+  <Step title="Set up environment variables">
+    Create a `.env` file in the project root with the required variables. See `env.example` for reference.
+  </Step>
+  <Step title="Build and start">
+    ```bash
+    make build
+    make dev
+    ```
+  </Step>
+  <Step title="Open the app">
+    Visit [http://localhost:5000/cuenta](http://localhost:5000/cuenta) in your browser.
+  </Step>
+</Steps>
+
+## Without Docker
+
+<Steps>
+  <Step title="Install Python 3.12">
+    ```bash
+    # macOS
+    brew install python@3.12
+
+    # Ubuntu/Debian
+    sudo apt install python3.12 python3.12-venv python3.12-dev
+    ```
+  </Step>
+  <Step title="Create a virtual environment">
+    ```bash
+    python3.12 -m venv venv
+    source venv/bin/activate
+    ```
+  </Step>
+  <Step title="Install dependencies">
+    ```bash
+    pip install -r requirements.txt
+    npm ci
+    ```
+  </Step>
+  <Step title="Set up environment variables">
+    Create a `.env` file in the project root.
+  </Step>
+  <Step title="Run the application">
+    ```bash
+    python application.py
+    ```
+  </Step>
+  <Step title="Open the app">
+    Visit [http://localhost:5000/cuenta](http://localhost:5000/cuenta) in your browser.
+  </Step>
+</Steps>
+
+## Common commands
+
+### Docker
+
+```bash
+make build                                 # Build containers
+make dev                                   # Start development environment
+make stop                                  # Stop containers
+make logs                                  # View container logs
+```
+
+### Tests
+
+```bash
+make test                                  # Run all tests (quiet)
+make testv                                 # Verbose BDD-style output
+make testv ARGS=tests/modules/coupons/     # Test specific directory
+make testdir DIR=tests/modules/coupons/test_services.py  # Test specific file
+```
+
+### Frontend
+
+```bash
+npm run watch          # Development build with hot reload
+npm run build          # Production build
+npm run test           # Run Vitest tests
+```
+
+### Formatting
+
+```bash
+npx @biomejs/biome format encuadrado_web/static/jsx/  # Format JS/JSX
+```
+
+### Database migrations
+
+Run from inside the Docker container:
+
+```bash
+flask db migrate -m "Add new table"   # Create migration
+flask db upgrade                       # Apply migrations
+flask db downgrade                     # Rollback
+```

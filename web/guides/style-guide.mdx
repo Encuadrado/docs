@@ -1,0 +1,126 @@
+---
+title: "Style guide"
+description: "Coding standards and conventions for the Encuadrado Web codebase."
+---
+
+## Python
+
+### Formatting
+
+- **Line length**: 100 characters max
+- **Quotes**: Single quotes (`'value'`)
+- **Indentation**: 4 spaces
+- **Formatter**: Ruff (configured in `pyproject.toml`, install separately with `pip install ruff`)
+
+```bash
+ruff format encuadrado_web/
+```
+
+### Naming conventions
+
+| Element | Convention | Example |
+|---------|-----------|---------|
+| Files | `snake_case` | `user_service.py` |
+| Classes | `PascalCase` | `UserService` |
+| Functions | `snake_case` | `get_user_by_id` |
+| Variables | `snake_case` | `user_data` |
+| Constants | `UPPER_SNAKE_CASE` | `MAX_RETRY_COUNT` |
+
+### Imports
+
+Order imports in three groups separated by blank lines:
+
+```python
+# Standard library
+import os
+from typing import Dict, List
+
+# Third-party
+from flask import Blueprint, jsonify
+from sqlalchemy import Column, Integer
+
+# Local application
+from encuadrado_web.models import User
+from .schemas import UserSchema
+```
+
+### Error handling
+
+Use custom exceptions, never return raw exception messages to clients:
+
+```python
+# Correct
+except NotFoundError:
+    return jsonify({"error": "User not found"}), 404
+except Exception as e:
+    capture_exception(e)
+    return jsonify({"error": "INTERNAL_SERVER_ERROR"}), 500
+
+# Wrong - exposes stack traces
+except Exception as e:
+    return f"{str(e)}", 400
+```
+
+Send exceptions to Sentry using either:
+
+```python
+# Option A: Decorator
+@capture_sentry_exceptions(tags={'module': 'invoicing'})
+def process_invoice(self):
+    ...
+
+# Option B: Manual capture
+from sentry_sdk import capture_exception
+try:
+    ...
+except Exception as e:
+    capture_exception(e)
+```
+
+## JavaScript / JSX
+
+### Formatting
+
+Files are formatted with Biome:
+
+```bash
+npx @biomejs/biome format encuadrado_web/static/jsx/
+```
+
+### Style
+
+- Semistandard JS style
+- React functional components preferred
+- Shared utilities in `static/jsx/utils/`
+
+## API design
+
+### RESTful endpoints
+
+```python
+@api.route('/users', methods=['GET'])              # List
+@api.route('/users', methods=['POST'])             # Create
+@api.route('/users/<int:user_id>', methods=['GET'])    # Read
+@api.route('/users/<int:user_id>', methods=['PUT'])    # Update
+@api.route('/users/<int:user_id>', methods=['DELETE']) # Delete
+```
+
+### Response format
+
+```python
+{
+    "data": { ... },
+    "meta": { "status": "success" },
+    "errors": []
+}
+```
+
+## Branch naming
+
+```
+<dev-name>/<type>/<name-of-branch>
+```
+
+Types: `feat`, `fix`, `iter`, `chore`
+
+Example: `john/feat/user-authentication`

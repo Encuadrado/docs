@@ -1,0 +1,46 @@
+---
+title: "Payments"
+description: "Payment processing across multiple providers."
+---
+
+## Module location
+
+- **Routes**: `encuadrado_web/modules/payment/routes.py`
+- **Services**: `encuadrado_web/modules/payment/services/`
+
+## Overview
+
+Encuadrado supports multiple payment providers to handle transactions across different markets and use cases.
+
+## Payment providers
+
+| Provider | Module | Use case |
+|----------|--------|----------|
+| **Stripe** | `modules/stripe/` | International card payments |
+| **Transbank** | `modules/transbank_psp/` | Chilean debit/credit cards (Webpay) |
+| **MercadoPago** | `modules/mercado_pago/` | Latin American payments |
+| **Fintoc** | `modules/fintoc/` | Chilean bank transfers |
+| **SumUp** | `modules/sumup/` | In-person card payments |
+| **BCI** | `modules/bci_payins/` | BCI bank pay-ins |
+| **Apple Pay** | `modules/apple_pay/` | Apple Pay integration |
+| **OpenPay** | `modules/openpay/` | Additional payment processing |
+
+## Key models
+
+| Model | Description |
+|-------|-------------|
+| `TransactionModel` | Central transaction record |
+| `PaymentsModel` | Payment records |
+| `StripePaymentModel` | Stripe-specific payment data |
+| `PaymentButtonModel` | Payment link configurations |
+
+## Related modules
+
+| Module | Purpose |
+|--------|---------|
+| `transactions` | Transaction history and management |
+| `coupons` | Discount codes |
+| `payouts` | Payout processing to professionals |
+| `wire_transfers` | Bank wire transfer tracking |
+| `user_payment_methods` | Saved payment methods |
+| `reconciliator` | Automated payment reconciliation |

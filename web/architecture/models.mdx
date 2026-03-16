@@ -1,0 +1,123 @@
+---
+title: "Database models"
+description: "SQLAlchemy models and database architecture."
+---
+
+## Organization
+
+All SQLAlchemy models live in `encuadrado_web/models/` with one model per file (117 files total). Models are imported and re-exported from `encuadrado_web/models/__init__.py`.
+
+```python
+from encuadrado_web.models import UserModel, BookingModel, ServiceModel
+```
+
+<Note>
+The models were originally in a single `models.py` file and have been progressively extracted into individual files. See `docs/MODEL_EXTRACTION_PROCESS.md` for the migration process.
+</Note>
+
+## Key models by domain
+
+### Core
+
+| Model | Description |
+|-------|-------------|
+| `UserModel` | Primary user entity (professionals) |
+| `BookingModel` | Appointments and scheduling |
+| `ServiceModel` | Services offered by professionals |
+| `PatientModel` | Patient information |
+| `CustomerModel` | Customer/client data |
+| `CenterModel` | Practice locations and organizations |
+
+### Scheduling
+
+| Model | Description |
+|-------|-------------|
+| `TemporalBookingModel` | Temporary booking states during creation |
+| `ServiceGroupModel` | Groups of related services |
+| `ServiceGroupServices` | Service-to-group associations |
+
+### Financial
+
+| Model | Description |
+|-------|-------------|
+| `TransactionModel` | Payment transactions |
+| `PaymentsModel` | Payment records |
+| `StripePaymentModel` | Stripe-specific payment data |
+| `BonoFonasaModel` | FONASA health insurance bonds |
+| `BoletaHonorariosModel` | Chilean tax receipts |
+| `EncuadradoInvoiceModel` | Platform invoices |
+| `PaymentButtonModel` | Payment link configurations |
+| `BankAccountModel` | Bank account information |
+
+### Clinical
+
+| Model | Description |
+|-------|-------------|
+| `PrescriptionModel` | Digital prescriptions |
+| `PrescriptionTemplateModel` | Reusable prescription templates |
+| `PrescriptionMedicationModel` | Medications within prescriptions |
+| `PatientRecordModel` | Clinical records |
+| `PatientRecordNoteModel` | Notes within records |
+| `PatientRecordTemplateModel` | Record templates |
+| `IntakeFormModel` | Patient intake forms |
+| `LabExamModel` | Laboratory exam orders |
+
+### Communication
+
+| Model | Description |
+|-------|-------------|
+| `CommunicationModel` | Base communication entity |
+| `EmailCommunicationModel` | Email records |
+| `WhatsAppCommunicationModel` | WhatsApp message records |
+| `PushCommunicationModel` | Push notification records |
+
+### Education
+
+| Model | Description |
+|-------|-------------|
+| `CourseModel` | Online courses |
+| `LessonModel` | Course lessons |
+| `EnrollmentModel` | Student enrollments |
+
+## Model conventions
+
+### Relationships
+
+Models use SQLAlchemy relationship patterns:
+
+```python
+class UserModel(db.Model):
+    __tablename__ = 'users'
+    id = db.Column(db.Integer, primary_key=True)
+
+    # One-to-one
+    profile = db.relationship('ProfileModel', uselist=False, back_populates='user')
+
+    # One-to-many
+    bookings = db.relationship('BookingModel', back_populates='user')
+
+    # Many-to-many
+    roles = db.relationship('Role', secondary='user_roles')
+```
+
+### Query helpers
+
+Models include class methods for common queries:
+
+```python
+class UserModel(db.Model):
+    @classmethod
+    def get_by_id(cls, id):
+        return cls.query.get(id)
+
+    @classmethod
+    def get_or_404(cls, id):
+        obj = cls.get_by_id(id)
+        if not obj:
+            raise NotFoundError(f"{cls.__name__} with id {id} not found")
+        return obj
+```
+
+### Audit logging
+
+Model changes are tracked via `AuditLogger`, configured in `models/__init__.py`.

@@ -1,0 +1,28 @@
+---
+title: "Patients"
+description: "Patient management and clinical data."
+---
+
+## Module location
+
+- **Routes**: `encuadrado_web/modules/patients/routes.py`
+- **Services**: `encuadrado_web/modules/patients/services/`
+- **Model**: `encuadrado_web/models/patient_model.py`
+
+## Overview
+
+The patients module manages patient records, contact information, and their relationship to professionals and bookings.
+
+## Key model: `PatientModel`
+
+Stores patient demographics, contact details, and identification (RUT for Chilean patients).
+
+## Related modules
+
+| Module | Purpose |
+|--------|---------|
+| `patient_records` | Clinical records and notes |
+| `prescriptions` | Digital prescriptions |
+| `intake_forms` | Pre-appointment questionnaires |
+| `isapres` | Health insurance (ISAPRE) integration |
+| `fonasa_bonds` | Public health insurance (FONASA) bonds |

@@ -1,0 +1,49 @@
+---
+title: "Bookings"
+description: "Appointment scheduling, confirmation, and management."
+---
+
+## Module location
+
+- **Routes**: `encuadrado_web/modules/bookings/routes.py`
+- **Services**: `encuadrado_web/modules/bookings/services/`
+- **Model**: `encuadrado_web/models/booking_model.py`
+
+## Overview
+
+The bookings module is the core scheduling engine. It handles appointment creation, confirmation, cancellation, rescheduling, and status management.
+
+## Key models
+
+| Model | Description |
+|-------|-------------|
+| `BookingModel` | Primary booking entity with status, datetime, service, patient |
+| `TemporalBookingModel` | Temporary booking state during the creation flow |
+
+## Booking lifecycle
+
+```
+Created → Confirmed → Completed
+    │         │
+    ▼         ▼
+ Cancelled  No-show
+```
+
+## Related modules
+
+| Module | Purpose |
+|--------|---------|
+| `confirmations` | Booking confirmation workflows |
+| `available_time_slots` | Availability calculation |
+| `waiting_list` | Waitlist for full time slots |
+| `gcal_events` | Google Calendar synchronization |
+| `google_reserve` | Google Reserve integration |
+| `customer_scheduling_intent` | Customer self-scheduling flow |
+
+## Background tasks
+
+Booking-related tasks run on the `booking_notifications` queue:
+- Confirmation emails and SMS
+- Reminder notifications
+- No-show follow-ups
+- Calendar sync updates

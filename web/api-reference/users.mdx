@@ -1,0 +1,45 @@
+---
+title: "Users"
+description: "User management, profiles, and authentication endpoints."
+---
+
+## Module location
+
+- **Routes**: `encuadrado_web/modules/users/routes.py`
+- **Services**: `encuadrado_web/modules/users/services/`
+- **Model**: `encuadrado_web/models/user_model.py`
+
+## Overview
+
+The users module handles user registration, authentication, profile management, and account settings. Users are the primary entity representing healthcare professionals on the platform.
+
+## Key model: `UserModel`
+
+The user model is the central entity connected to bookings, services, patients, payments, and all other domain objects.
+
+## Related modules
+
+| Module | Purpose |
+|--------|---------|
+| `professional_profiles` | Public-facing professional profiles and showcase pages |
+| `onboarding` | New user onboarding flow |
+| `subscription` | Plan management and feature access |
+| `sessions_package` | Session package configuration |
+
+## Services
+
+The users module contains services for:
+
+- User CRUD operations
+- Profile management
+- Account settings
+- User verification (RNPI registry)
+- Feature flags and permissions
+- Dashboard data aggregation
+
+## Authentication flow
+
+1. User submits credentials
+2. Flask-Login creates a session
+3. `@requires_auth_2` validates session on protected routes
+4. `@requires_valid_user` injects the authenticated user object

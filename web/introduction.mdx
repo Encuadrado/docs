@@ -1,0 +1,61 @@
+---
+title: "Introduction"
+description: "Encuadrado Web is a healthcare scheduling and practice management platform built with Flask, React, and PostgreSQL."
+---
+
+Encuadrado Web is a full-stack web application that powers a healthcare scheduling and practice management platform. It enables healthcare professionals to manage bookings, patients, payments, prescriptions, and clinical records.
+
+## Technology stack
+
+| Category | Technologies |
+|----------|-------------|
+| **Backend** | Python 3.12, Flask 3.x, SQLAlchemy 2.x ORM |
+| **Database** | PostgreSQL |
+| **Frontend** | React 18, Webpack, Jinja2 templates, vanilla JS |
+| **Background jobs** | Celery with Redis broker |
+| **Containerization** | Docker with docker-compose |
+| **Infrastructure** | AWS Elastic Beanstalk, RDS, S3, CloudFront |
+
+## Key features
+
+<CardGroup cols={2}>
+  <Card title="Scheduling" icon="calendar">
+    Appointment booking, calendar management, availability configuration, and Google Calendar sync.
+  </Card>
+  <Card title="Payments" icon="credit-card">
+    Multi-provider payment processing via Stripe, Transbank, MercadoPago, Fintoc, and SumUp.
+  </Card>
+  <Card title="Patient management" icon="user">
+    Patient records, clinical history, intake forms, and referrals.
+  </Card>
+  <Card title="Prescriptions" icon="prescription">
+    Digital prescriptions, medication management, and certificate issuance.
+  </Card>
+  <Card title="Invoicing" icon="file-invoice">
+    Automated invoicing, FONASA bond processing, and boleta de honorarios issuance.
+  </Card>
+  <Card title="Communications" icon="envelope">
+    Email, WhatsApp, and push notification channels for booking confirmations and reminders.
+  </Card>
+</CardGroup>
+
+## Project scale
+
+| Metric | Count |
+|--------|-------|
+| Database models | 120+ |
+| Backend modules | 72 |
+| API route files | 111 |
+| React component bundles | 140+ |
+| Celery task queues | 15 |
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Set up your local development environment.
+  </Card>
+  <Card title="Architecture" icon="sitemap" href="/architecture/overview">
+    Understand how the codebase is structured.
+  </Card>
+</CardGroup>

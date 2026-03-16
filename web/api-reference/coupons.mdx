@@ -1,0 +1,24 @@
+---
+title: "Coupons"
+description: "Discount codes and promotional pricing."
+---
+
+## Module location
+
+- **Routes**: `encuadrado_web/modules/coupons/routes.py`
+- **Services**: `encuadrado_web/modules/coupons/services/`
+
+## Overview
+
+The coupons module manages discount codes that can be applied to bookings and payments. Supports both fixed-amount and percentage-based discounts.
+
+## Discount types
+
+| Type | Description |
+|------|-------------|
+| `fixed` | Subtracts a fixed amount from the price |
+| `percentage` | Applies a percentage discount |
+
+## Usage
+
+Coupons are validated and applied during the payment flow. The `calculate_price_with_discount` method on the coupon model handles price calculation.

@@ -1,0 +1,37 @@
+---
+title: "Patient records"
+description: "Clinical records, notes, and medical history."
+---
+
+## Module location
+
+- **Routes**: `encuadrado_web/modules/patient_records/routes.py`
+- **Services**: `encuadrado_web/modules/patient_records/services/`
+
+## Overview
+
+The patient records module manages clinical documentation including consultation notes, medical history, and structured record templates.
+
+## Key models
+
+| Model | Description |
+|-------|-------------|
+| `PatientRecordModel` | Clinical record entries |
+| `PatientRecordNoteModel` | Notes within a record |
+| `PatientRecordTemplateModel` | Structured record templates |
+
+## Features
+
+- Create and manage clinical records per patient
+- Structured templates for different consultation types
+- Note-taking with rich text support
+- Record history and timeline view
+- Lab exam ordering (`LabExamModel`)
+
+## Frontend components
+
+- `patientRecords` - Record management UI
+- `patientRecordTemplates` - Template editor
+- `patientHistory` - Patient timeline view
+- `patientReferrals` - Referral management
+- `issueExamOrder` - Lab exam ordering

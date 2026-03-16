@@ -1,0 +1,31 @@
+---
+title: "Services"
+description: "Professional service definitions, pricing, and configuration."
+---
+
+## Module location
+
+- **Routes**: `encuadrado_web/modules/services/routes.py`
+- **Services**: `encuadrado_web/modules/services/services/`
+- **Model**: `encuadrado_web/models/service_model.py`
+
+## Overview
+
+Services represent the offerings that healthcare professionals provide to patients. Each service has a name, duration, price, and scheduling configuration.
+
+## Key models
+
+| Model | Description |
+|-------|-------------|
+| `ServiceModel` | Service definition (name, duration, price, category) |
+| `ServiceGroupModel` | Groups of related services |
+| `ServiceGroupServices` | Many-to-many association |
+
+## Related modules
+
+| Module | Purpose |
+|--------|---------|
+| `service_groups` | Service grouping and categorization |
+| `service_variations` | Service pricing variations |
+| `available_time_slots` | Availability based on service duration |
+| `showcase` | Public service showcase pages |
