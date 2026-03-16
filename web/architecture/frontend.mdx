@@ -63,6 +63,10 @@ Output: `static/dist/[feature].bundle.js`
 
 ## Jinja2 integration
 
+<Warning>
+Jinja2 templates are legacy. Do not create new Jinja2 templates or views. Frontend views (home, profiles, etc.) are being migrated to dedicated standalone repos. New UI work should go in the appropriate standalone frontend repo, not in Jinja2 templates within this codebase.
+</Warning>
+
 React bundles are loaded into server-rendered Jinja2 templates:
 
 ```html

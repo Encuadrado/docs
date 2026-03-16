@@ -81,6 +81,12 @@ The models were originally in a single `models.py` file and have been progressiv
 
 ## Model conventions
 
+### Business logic
+
+<Warning>
+Model files should only contain column definitions, relationships, and simple query helpers. **Do not add business logic to models** — this is a legacy pattern being phased out. All business logic belongs in the service layer under `modules/[feature]/services/`.
+</Warning>
+
 ### Relationships
 
 Models use SQLAlchemy relationship patterns:

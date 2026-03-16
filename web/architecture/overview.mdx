@@ -34,7 +34,7 @@ encuadrado_web/
 │       └── middlewares.py
 ├── api_v1/              # Versioned API endpoints
 ├── app_mobile/          # Mobile-specific endpoints
-├── templates/           # Jinja2 templates
+├── templates/           # Jinja2 templates (legacy — do not add new ones)
 ├── static/
 │   ├── jsx/             # React components (140+ bundles)
 │   ├── dist/            # Webpack output
@@ -60,10 +60,10 @@ Middleware (auth, validation)
 Route Handler (routes.py)
     │
     ▼
-Service Layer (services/)
+Service Layer (services/)  ← business logic goes here
     │
     ▼
-Model Layer (models/)
+Model Layer (models/)  ← data access only, no business logic
     │
     ▼
 PostgreSQL Database
