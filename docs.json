@@ -45,46 +45,21 @@
               "web/deployment/ci-cd",
               "web/deployment/infrastructure"
             ]
-          }
-        ]
-      },
-      {
-        "tab": "Web API",
-        "groups": [
-          {
-            "group": "API overview",
-            "pages": [
-              "web/api-reference/overview"
-            ]
           },
           {
-            "group": "Core",
+            "group": "API reference",
             "pages": [
+              "web/api-reference/overview",
               "web/api-reference/users",
               "web/api-reference/bookings",
               "web/api-reference/services",
-              "web/api-reference/patients"
-            ]
-          },
-          {
-            "group": "Payments",
-            "pages": [
+              "web/api-reference/patients",
               "web/api-reference/payments",
               "web/api-reference/invoicing",
-              "web/api-reference/coupons"
-            ]
-          },
-          {
-            "group": "Clinical",
-            "pages": [
+              "web/api-reference/coupons",
               "web/api-reference/prescriptions",
               "web/api-reference/patient-records",
-              "web/api-reference/intake-forms"
-            ]
-          },
-          {
-            "group": "Communication",
-            "pages": [
+              "web/api-reference/intake-forms",
               "web/api-reference/communications",
               "web/api-reference/notifications"
             ]
