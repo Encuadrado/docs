@@ -90,6 +90,32 @@
             ]
           }
         ]
+      },
+      {
+        "tab": "Home",
+        "groups": [
+          {
+            "group": "Getting started",
+            "pages": [
+              "home/introduction",
+              "home/quickstart"
+            ]
+          },
+          {
+            "group": "Architecture",
+            "pages": [
+              "home/architecture/overview",
+              "home/architecture/features"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "home/guides/testing",
+              "home/guides/style-guide"
+            ]
+          }
+        ]
       }
     ]
   },

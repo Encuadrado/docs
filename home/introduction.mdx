@@ -1,0 +1,70 @@
+---
+title: "Introduction"
+description: "Encuadrado Home is the professional dashboard for healthcare practitioners, built with Next.js, React 19, and TypeScript."
+---
+
+Encuadrado Home is the professional-facing dashboard where healthcare practitioners manage their day-to-day operations: scheduling, patients, billing, prescriptions, team management, and more. It's a Next.js application mounted at `/cuenta` that communicates with the Flask backend (Encuadrado Web).
+
+## Technology stack
+
+| Category | Technologies |
+|----------|-------------|
+| **Framework** | Next.js 15, React 19, TypeScript |
+| **Styling** | Tailwind CSS 4, Radix UI components |
+| **State** | TanStack Query v5, React Context API |
+| **Forms** | React Hook Form + Zod validation |
+| **Testing** | Vitest, Testing Library, MSW |
+| **Component docs** | [storybook.encuadrado.com](https://storybook.encuadrado.com/) (centralized Storybook) |
+| **Code quality** | Biome (linter + formatter) |
+| **Error tracking** | Sentry |
+| **Package manager** | pnpm |
+| **Runtime** | Node 22.x |
+
+## Key features
+
+<CardGroup cols={2}>
+  <Card title="Scheduling" icon="calendar" href="/home/architecture/features#scheduling">
+    Full calendar with FullCalendar.io, drag-and-drop booking, Google Calendar sync, and team resource views.
+  </Card>
+  <Card title="Patients" icon="user" href="/home/architecture/features#patients">
+    Patient database, clinical records, intake forms, import/export, duplicate detection, and discharge management.
+  </Card>
+  <Card title="Billing" icon="credit-card" href="/home/architecture/features#billing">
+    Payment tracking, invoicing, financial reports, and WhatsApp payment collection.
+  </Card>
+  <Card title="Prescriptions" icon="prescription" href="/home/architecture/features#prescriptions">
+    Digital prescription generation with templates and QR codes.
+  </Card>
+  <Card title="Team management" icon="users" href="/home/architecture/features#team">
+    Team members, roles and permissions, onboarding workflows, and seat assignments.
+  </Card>
+  <Card title="Integrations" icon="plug" href="/home/architecture/features#integrations">
+    Fonasa (Chilean health insurance), AI transcription, Google Calendar, and Mux video.
+  </Card>
+</CardGroup>
+
+## External services
+
+| Service | Purpose |
+|---------|---------|
+| **Flask backend** | Core API (`NEXT_PUBLIC_API_BASE_URL`) |
+| **Sentry** | Error monitoring |
+| **Segment** | Analytics |
+| **OpenAI** | AI chat assistant (GPT via AI SDK) |
+| **Google Calendar** | Calendar sync |
+| **Google Maps** | Address autocomplete |
+| **Mux** | Video hosting for online sessions |
+| **Socket.io** | Real-time communication |
+| **Fonasa** | Chilean health insurance integration |
+| **Vercel** | Hosting, analytics, speed insights |
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/home/quickstart">
+    Set up your local development environment.
+  </Card>
+  <Card title="Architecture" icon="sitemap" href="/home/architecture/overview">
+    Understand the project structure and patterns.
+  </Card>
+</CardGroup>

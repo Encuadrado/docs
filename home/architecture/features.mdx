@@ -1,0 +1,92 @@
+---
+title: "Features"
+description: "Main feature modules in Encuadrado Home."
+---
+
+## Scheduling
+
+**Path**: `app/calendario/`
+
+Full calendar interface built on FullCalendar.io with:
+
+- Day, week, and month views
+- Drag-and-drop booking management
+- Team resource views (multi-practitioner)
+- Google Calendar sync
+- Temporal blocker events
+- Real-time availability checking
+
+## Patients
+
+**Path**: `app/pacientes/`
+
+Comprehensive patient management:
+
+- Patient database with search and filtering
+- Clinical records and medical data
+- Intake forms
+- Patient import (bulk) and export (Excel via SheetJS)
+- Duplicate detection and merging
+- Patient discharge workflows
+- Tabs for active, inactive, and deleted patients
+
+## Billing
+
+**Path**: `app/finanzas/`
+
+Financial management:
+
+- Payment tracking and history
+- Invoice management
+- Financial reports
+- WhatsApp payment collection links
+
+## Prescriptions
+
+**Path**: `app/recetas-medicas/`
+
+Digital prescription system:
+
+- Prescription generation with templates
+- Medication management
+- QR code generation
+- MINSAL (Chilean health ministry) compliance
+
+## Team
+
+**Path**: `app/equipo/`
+
+Team operations:
+
+- Member management and onboarding
+- Role-based permissions (`lib/permissions.ts`)
+- Booking team views
+- Seat assignments
+- Profile configuration
+
+## Integrations
+
+**Path**: `app/conexiones/`
+
+Third-party service connections:
+
+- **Fonasa**: Chilean public health insurance integration
+- **AI transcriber**: Automated session transcription
+- **Google Calendar**: Two-way calendar sync
+- **Mux**: Video hosting for online sessions (`app/sala-online/`)
+
+## Other modules
+
+| Module | Path | Description |
+|--------|------|-------------|
+| Evaluations | `app/evaluaciones/` | Patient assessment tools and forms |
+| Forms | `app/formularios/` | Dynamic form builder and templates |
+| Communications | `app/comunicaciones/` | Messaging and notification tracking |
+| Services | `app/servicios/` | Service catalog management |
+| Schedules | `app/horarios-servicios/` | Service schedule configuration |
+| Subscription | `app/suscripcion-cl/` | Chilean subscription management |
+| Showcase | `app/vitrina/` | Courses and public showcase |
+| Chat | `app/chat/` | AI assistant (OpenAI via Vercel AI SDK) |
+| Analytics | `app/analytics/` | Usage analytics dashboard |
+| Settings | `app/configuraciones/` | App and appearance settings |
+| Help | `app/ayuda/` | Help section |

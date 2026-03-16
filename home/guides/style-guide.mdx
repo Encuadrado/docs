@@ -1,0 +1,54 @@
+---
+title: "Style guide"
+description: "Code conventions and development guidelines for Encuadrado Home."
+---
+
+## Code formatting
+
+The project uses Biome for linting and formatting:
+
+```bash
+pnpm lint          # Check for issues
+pnpm lint:fix      # Auto-fix issues
+pnpm format        # Format code
+pnpm fix           # Format + lint:fix combined
+pnpm typecheck     # TypeScript type checking
+```
+
+**Biome rules** (`biome.json`):
+- Line width: 100 characters
+- Single quotes
+- Trailing commas (ES5 style)
+- Tailwind CSS directive parsing enabled
+
+## TypeScript
+
+- Strict mode enabled
+- Path alias: `@/*` maps to project root
+- Use Zod schemas for runtime validation alongside TypeScript types
+
+## Component conventions
+
+- Use `'use client'` directive for client-side pages
+- Base UI components in `components/ui/` wrap Radix UI primitives
+- Feature-specific components live alongside their page in `app/[feature]/`
+- Shared components go in `components/shared/`
+
+## Styling
+
+- Tailwind CSS 4 for all styling
+- Use `cn()` utility from `lib/utils.ts` for conditional class merging (clsx + tailwind-merge)
+- Dark mode via `class` strategy
+- No inline styles — use Tailwind classes
+
+## State management
+
+- **Server data**: TanStack Query v5 with `useQuery` / `useMutation`
+- **UI state**: React Context API via custom hooks
+- **Form state**: React Hook Form + Zod validation
+
+## Internationalization
+
+- All user-facing strings should use `react-i18next`
+- Primary locale: `es-CL` (Chilean Spanish)
+- 11 Spanish locale variants in `messages/`

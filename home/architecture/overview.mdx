@@ -1,0 +1,113 @@
+---
+title: "Architecture overview"
+description: "Project structure and architectural patterns in Encuadrado Home."
+---
+
+## Base path
+
+The app is mounted at `/cuenta` via `next.config.mjs`. All routes are relative to this base path (e.g., `/cuenta/calendario`, `/cuenta/pacientes`).
+
+## Directory structure
+
+```
+home/
+├── app/                     # Next.js App Router
+│   ├── layout.tsx           # Root layout with providers
+│   ├── page.tsx             # Home (redirects to /calendario)
+│   ├── api/                 # API routes (chat, client streaming)
+│   ├── calendario/          # Calendar and scheduling
+│   ├── pacientes/           # Patient management
+│   ├── equipo/              # Team management
+│   ├── finanzas/            # Billing and payments
+│   ├── recetas-medicas/     # Prescriptions
+│   ├── evaluaciones/        # Patient evaluations
+│   ├── formularios/         # Form builder
+│   ├── comunicaciones/      # Messaging
+│   ├── conexiones/          # Integrations (Fonasa, AI transcriber)
+│   ├── configuraciones/     # Settings
+│   ├── servicios/           # Service catalog
+│   ├── suscripcion-cl/      # Chilean subscription
+│   ├── horarios-servicios/  # Service schedules
+│   ├── sala-online/         # Video consultations
+│   ├── vitrina/             # Showcase/courses
+│   ├── chat/                # AI chat assistant
+│   ├── analytics/           # Analytics dashboard
+│   └── ayuda/               # Help section
+│
+├── components/              # Reusable components
+│   ├── main-layout/         # Sidebar, headers, announcements
+│   ├── providers/           # Context providers
+│   ├── ui/                  # Base UI (Radix UI wrappers)
+│   └── shared/              # Rich text editor, fields, video
+│
+├── hooks/                   # Custom React hooks
+├── lib/                     # Utilities and config
+│   ├── utils.ts             # cn() helper, Axios API instance
+│   ├── analytics/           # Segment tracking
+│   ├── formatters/          # Date, currency, text
+│   ├── validation/          # Zod schemas
+│   ├── types/               # Shared TypeScript types
+│   ├── permissions.ts       # Role-based permissions
+│   └── constants.ts         # App constants
+│
+├── messages/                # i18n (11 Spanish locales)
+├── stories/                 # Storybook stories
+└── tests/                   # Vitest unit tests
+```
+
+## Provider stack
+
+The root layout wraps the app in nested providers:
+
+```
+ThemeProvider
+  └── QueryProvider (TanStack Query, 60s stale time, 1 retry)
+      └── FlaskSessionProvider (auth from backend)
+          └── SentryProvider
+              └── LocaleProvider (i18n)
+                  └── CenterProvider (multi-center context)
+                      └── SidebarProvider
+                          └── HeaderProvider
+```
+
+## Data flow
+
+```
+Flask Backend API (port 5000)
+    │
+    ▼
+Axios instance (lib/utils.ts, with credentials)
+    │
+    ▼
+TanStack Query (caching, refetching)
+    │
+    ▼
+React components (via useQuery hooks)
+```
+
+All API calls go through the Axios instance configured in `lib/utils.ts`, which sets `withCredentials: true` and custom headers. TanStack Query handles caching with a 60-second stale time.
+
+## Key patterns
+
+### Feature-based pages
+
+Each feature under `app/` is self-contained with its own components, state, and data fetching. Pages use `'use client'` directives for client-side rendering.
+
+### Context API for shared state
+
+Domain-specific contexts (Flask session, center member, sidebar state) are exposed via custom hooks in `hooks/`:
+
+| Hook | Purpose |
+|------|---------|
+| `useFlaskSessionContext` | Current user session from backend |
+| `useCenterMemberContext` | Active center and member selection |
+| `useMobile` | Responsive breakpoint detection |
+| `useToast` | Toast notifications |
+
+### UI components
+
+Base components in `components/ui/` wrap Radix UI primitives with Tailwind styling. Feature components compose these into domain-specific UI.
+
+### Internationalization
+
+Uses `react-i18next` with 11 Spanish locale variants (`messages/es-CL.json` is the primary). Chilean Spanish is the default locale.

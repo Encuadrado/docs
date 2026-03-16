@@ -1,0 +1,26 @@
+---
+title: "Testing"
+description: "Testing setup and conventions in Encuadrado Home."
+---
+
+## Setup
+
+The project uses Vitest with Testing Library and MSW (Mock Service Worker) for API mocking.
+
+**Configuration**: `vitest.config.ts`
+- Environment: jsdom
+- Setup file: `vitest.setup.ts` (mocks for lottie-web and react-i18next)
+
+## Running tests
+
+```bash
+pnpm test          # Watch mode
+pnpm test:run      # Single run
+pnpm test:ui       # Vitest UI
+```
+
+## Storybook
+
+<Warning>
+The local Storybook in this repo (`stories/`, `pnpm storybook`) is deprecated. Component documentation and visual testing now live in the centralized [encuadrado-components](https://github.com/Encuadrado/encuadrado-components) repo, available at [storybook.encuadrado.com](https://storybook.encuadrado.com/).
+</Warning>
