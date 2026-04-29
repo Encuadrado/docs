@@ -92,6 +92,18 @@
           }
         ]
       }
+      ,
+      {
+        "tab": "Dania",
+        "groups": [
+          {
+            "group": "Architecture",
+            "pages": [
+              "dania/architecture/pubsub"
+            ]
+          }
+        ]
+      }
     ]
   },
   "footerSocials": {

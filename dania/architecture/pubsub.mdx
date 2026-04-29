@@ -1,0 +1,172 @@
+---
+title: "Pub/sub architecture"
+description: "How the main app and WhatsApp worker communicate via Redis pub/sub."
+---
+
+The service runs as two separate Node.js processes that communicate exclusively through Redis pub/sub:
+
+- **App process** — HTTP server, business logic, AI agents (`src/index.ts`)
+- **Worker process** — browser-based WhatsApp client via puppeteer (`src/whatsapp-worker.ts`)
+
+The worker is isolated because puppeteer requires a long-lived browser instance that would block the HTTP event loop. Redis acts as the message broker between them.
+
+```mermaid
+graph LR
+    subgraph App Process
+        Express[Express Server]
+        Agents[AI Agents]
+        ProviderManager
+        WorkerBridge
+    end
+
+    subgraph Worker Process
+        WorkerServer
+        ClientManager
+        Puppeteer[Puppeteer / whatsapp-web.js]
+    end
+
+    Redis[(Redis)]
+
+    WorkerBridge -- commands --> Redis
+    Redis -- events --> WorkerBridge
+    WorkerServer -- events --> Redis
+    Redis -- commands --> WorkerServer
+    WorkerServer --> ClientManager --> Puppeteer
+
+    MetaAPI[Meta WhatsApp Cloud API]
+    OfficialProvider --> MetaAPI
+    ProviderManager --> OfficialProvider
+    ProviderManager --> WorkerBridgeProvider --> WorkerBridge
+```
+
+## Channels
+
+| Channel | Direction | Constant |
+|---|---|---|
+| `dania:worker:commands` | App → Worker | `CHANNELS.APP_COMMANDS` |
+| `dania:worker:events` | Worker → App | `CHANNELS.WORKER_EVENTS` |
+
+Defined in `src/services/worker/types.ts`.
+
+## Event types
+
+### Worker events (`dania:worker:events`)
+
+Events the worker publishes to the app:
+
+| Type | Description |
+|---|---|
+| `qr` | QR code generated — user must scan to log in |
+| `ready` | WhatsApp session authenticated and active |
+| `auth_failure` | Authentication failed |
+| `disconnected` | Session disconnected |
+| `incomingMessage` | Patient sent a message |
+| `outgoingMessage` | Professional sent a message (via WhatsApp Web) |
+| `response` | Reply to a command sent by the app (includes `requestId`, result or error) |
+
+### App commands (`dania:worker:commands`)
+
+Commands the app sends to the worker:
+
+| Type | Description |
+|---|---|
+| `createClient` | Start a new WhatsApp session |
+| `destroyClient` | Stop and remove a session |
+| `logoutClient` | Log out and destroy a session |
+| `sendMessage` | Send a WhatsApp message to a phone number |
+| `sendTyping` | Show typing indicator |
+| `clearTyping` | Clear typing indicator |
+| `markChatUnread` | Mark a chat as unread |
+| `listClients` | Return all active session IDs |
+
+## Message flows
+
+### Incoming message (patient → AI agents)
+
+<Steps>
+  <Step title="WhatsApp Web.js receives message">
+    The puppeteer-based client in the worker process picks up the patient's message.
+  </Step>
+  <Step title="Worker publishes to WORKER_EVENTS">
+    `ClientManager` emits `incomingMessage`. `WorkerServer` catches it and publishes a `WorkerIncomingMessage` event to `dania:worker:events`.
+  </Step>
+  <Step title="App receives and routes">
+    `WorkerBridge` receives the Redis message and emits `incomingMessage`. `ProviderManager` forwards it to the registered handler.
+  </Step>
+  <Step title="Handler processes with AI">
+    `createMessageHandler()` in `src/services/whatsapp/handlers.ts` saves the message to MongoDB and routes it to the AI agents (classifier, scheduler, etc.), which may trigger a `sendMessage` command back to the worker.
+  </Step>
+</Steps>
+
+### Outgoing message (app → WhatsApp)
+
+<Steps>
+  <Step title="API route calls sendMessage">
+    An HTTP handler or AI agent calls `ProviderManager.sendMessage()`.
+  </Step>
+  <Step title="App publishes command">
+    `WorkerBridge.sendCommand()` generates a UUID for the request and publishes a `sendMessage` command to `dania:worker:commands`. It stores a pending promise with a 30-second timeout.
+  </Step>
+  <Step title="Worker executes">
+    `WorkerServer` receives the command and routes it to `ClientManager`, which sends the message via WhatsApp Web.js.
+  </Step>
+  <Step title="Worker confirms">
+    On success, the worker publishes an `outgoingMessage` event and a `response` event with the `requestId`. The app resolves the pending promise and `createMessageCreateHandler()` saves the message to MongoDB.
+  </Step>
+</Steps>
+
+### Command-response pattern
+
+All commands follow a request-response pattern with a 30-second timeout:
+
+<Steps>
+  <Step title="App sends command">
+    `WorkerBridge.sendCommand()` assigns a UUID, stores `{ resolve, timer }` in a `pendingCommands` map, and publishes to `APP_COMMANDS`.
+  </Step>
+  <Step title="Worker executes and responds">
+    `WorkerServer.handleCommand()` runs the action and publishes a `WorkerResponse` with the same `requestId` to `WORKER_EVENTS`.
+  </Step>
+  <Step title="App resolves">
+    `WorkerBridge.handleResponse()` matches the `requestId`, clears the timer, resolves the promise, and removes it from `pendingCommands`.
+  </Step>
+</Steps>
+
+<Warning>
+  If the worker does not respond within 30 seconds, the promise rejects with a timeout error. The command is removed from `pendingCommands` automatically.
+</Warning>
+
+## Key files
+
+| File | Responsibility |
+|---|---|
+| `src/services/worker/types.ts` | Channel names, event types, command types |
+| `src/services/worker/WorkerBridge.ts` | App-side: subscribes to `WORKER_EVENTS`, publishes to `APP_COMMANDS`, manages pending commands |
+| `src/services/worker/WorkerServer.ts` | Worker-side: subscribes to `APP_COMMANDS`, publishes to `WORKER_EVENTS` |
+| `src/services/worker/ClientManager.ts` | Manages WhatsApp session instances, emits lifecycle and message events |
+| `src/services/whatsapp/ProviderManager.ts` | Orchestrates providers and bridges WorkerBridge events to message handlers |
+| `src/services/whatsapp/handlers.ts` | Message handler factories (incoming → AI agents, outgoing → DB save) |
+| `src/services/redis.ts` | Redis client factory, message debounce (45s), webhook deduplication (5min) |
+
+## Redis configuration
+
+Set `REDIS_URL` in `.env`. The format differs by environment:
+
+<CodeGroup>
+
+```bash Development
+# host:port — the client splits this and connects with TLS (rejectUnauthorized: false)
+REDIS_URL=localhost:6379
+```
+
+```bash Production
+# Full Redis URL — passed directly to ioredis
+REDIS_URL=rediss://user:password@your-redis-host:6380
+```
+
+</CodeGroup>
+
+The logic lives in `src/services/redis.ts::createRedisClient()`: if `isProduction` is true, it passes `REDIS_URL` directly to ioredis; otherwise it splits on `:` to extract host and port, then adds a TLS config with `rejectUnauthorized: false`.
+
+<Info>
+  Each process (app and worker) calls `createRedisClient()` twice — once for publishing and once for subscribing — as ioredis requires separate client instances for pub/sub.
+</Info>
