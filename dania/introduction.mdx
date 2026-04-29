@@ -1,0 +1,50 @@
+---
+title: "Introduction"
+description: "Dania is Encuadrado's AI-powered WhatsApp agent for healthcare professionals."
+---
+
+Dania Chat Agent is a Node.js/TypeScript service that classifies incoming patient WhatsApp messages through an AI agent pipeline and routes responses accordingly. It runs as two separate processes — an HTTP app and a WhatsApp worker — communicating via Redis pub/sub.
+
+The system is mid-migration from the unofficial WhatsApp API (whatsapp-web.js / Puppeteer) to the official Meta WhatsApp Cloud API.
+
+## Technology stack
+
+| Category | Technologies |
+|---|---|
+| **Runtime** | Node.js + TypeScript (strict, CommonJS, ES2020) |
+| **Framework** | Express.js v5 |
+| **WhatsApp (official)** | Meta WhatsApp Cloud API (Graph API) |
+| **WhatsApp (unofficial, being phased out)** | whatsapp-web.js + Puppeteer |
+| **AI / LLM** | LangChain + LangGraph with OpenAI (gpt-4o-mini) |
+| **Database** | AWS DynamoDB |
+| **Cache / IPC** | Redis (ioredis) |
+| **Monitoring** | New Relic |
+| **Process manager** | PM2 |
+
+## Key features
+
+<CardGroup cols={2}>
+  <Card title="AI agent pipeline" icon="robot">
+    Classifies patient messages and routes them through a LangGraph orchestrator with scheduling, booking, and Q&A tools.
+  </Card>
+  <Card title="WhatsApp integration" icon="whatsapp">
+    Supports both the unofficial (Puppeteer) and official (Meta Cloud API) WhatsApp providers simultaneously.
+  </Card>
+  <Card title="Two-process architecture" icon="server">
+    HTTP app and WhatsApp worker run as separate OS processes, communicating via Redis pub/sub for isolation and resilience.
+  </Card>
+  <Card title="Message debouncing" icon="clock">
+    Buffers rapid patient messages with a 45-second Redis debounce before sending to the AI pipeline.
+  </Card>
+</CardGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/dania/quickstart">
+    Run the service locally.
+  </Card>
+  <Card title="Pub/sub architecture" icon="sitemap" href="/dania/architecture/pubsub">
+    Understand how the two processes communicate.
+  </Card>
+</CardGroup>

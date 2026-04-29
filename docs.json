@@ -97,6 +97,13 @@
         "tab": "Dania",
         "groups": [
           {
+            "group": "Getting started",
+            "pages": [
+              "dania/introduction",
+              "dania/quickstart"
+            ]
+          },
+          {
             "group": "Architecture",
             "pages": [
               "dania/architecture/pubsub"
